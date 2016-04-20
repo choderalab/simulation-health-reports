@@ -5,7 +5,7 @@
 * Install [miniconda](http://conda.pydata.org/miniconda.html) or [anaconda](https://www.continuum.io/downloads) Python.
 * Install `pymbar`, `netcdf4`, `jupyter`, and `matplotlib` with:
 ```bash
-conda install --yes -c omnia pymbar netcdf4 jupyter matplotlib
+conda install --yes -c omnia pymbar==2.1beta0 netcdf4 jupyter matplotlib
 ```
 * Start `jupyter`:
 ```bash
