@@ -39,7 +39,7 @@ import numpy
 import netCDF4 as netcdf # netcdf4-python
 
 from pymbar import MBAR # multistate Bennett acceptance ratio
-import timeseries # for statistical inefficiency analysis
+from pymbar import timeseries # for statistical inefficiency analysis
 
 #=============================================================================================
 # SUBROUTINES
@@ -96,7 +96,7 @@ def initialize_netcdf(netcdf_file, title, natoms, is_periodic = False, has_veloc
   NOTES
     The AMBER NetCDF convention is defined here:
 
-    http://amber.scripps.edu/netcdf/nctraj.html    
+    http://amber.scripps.edu/netcdf/nctraj.html
 
   """
 
@@ -107,7 +107,7 @@ def initialize_netcdf(netcdf_file, title, natoms, is_periodic = False, has_veloc
   netcdf_file.createDimension('label', 5)        # label lengths for cell dimensions
   netcdf_file.createDimension('cell_spatial', 3) # naming conventions for cell spatial dimensions
   netcdf_file.createDimension('cell_angular', 3) # naming conventions for cell angular dimensions
-  
+
   # Set attributes.
   setattr(netcdf_file, 'title', title)
   setattr(netcdf_file, 'application', 'AMBER')
@@ -123,7 +123,7 @@ def initialize_netcdf(netcdf_file, title, natoms, is_periodic = False, has_veloc
     cell_lengths = netcdf_file.createVariable('cell_lengths', 'd', ('frame', 'cell_spatial'))
     setattr(cell_lengths, 'units', 'angstrom')
     cell_angles = netcdf_file.createVariable('cell_angles', 'd', ('frame', 'cell_angular'))
-    setattr(cell_angles, 'units', 'degree')  
+    setattr(cell_angles, 'units', 'degree')
 
     netcdf_file.variables['cell_spatial'][0] = 'x'
     netcdf_file.variables['cell_spatial'][1] = 'y'
@@ -135,9 +135,9 @@ def initialize_netcdf(netcdf_file, title, natoms, is_periodic = False, has_veloc
 
   # Define variables to store velocity data, if specified.
   if has_velocities:
-    velocities = netcdf_file.createVariable('velocities', 'd', ('frame', 'atom', 'spatial'))    
+    velocities = netcdf_file.createVariable('velocities', 'd', ('frame', 'atom', 'spatial'))
     setattr(velocities, 'units', 'angstrom/picosecond')
-    setattr(velocities, 'scale_factor', 20.455)  
+    setattr(velocities, 'scale_factor', 20.455)
 
   # Define coordinates and snapshot times.
   frame_times = netcdf_file.createVariable('time', 'f', ('frame',))
@@ -149,8 +149,8 @@ def initialize_netcdf(netcdf_file, title, natoms, is_periodic = False, has_veloc
   frame_energies = netcdf_file.createVariable('total_energy', 'f', ('frame',))
   setattr(frame_energies, 'units', 'kilocalorie/mole')
   frame_energies = netcdf_file.createVariable('potential_energy', 'f', ('frame',))
-  setattr(frame_energies, 'units', 'kilocalorie/mole')  
-  
+  setattr(frame_energies, 'units', 'kilocalorie/mole')
+
   return
 
 def write_netcdf_frame(netcdf_file, frame_index, time = None, coordinates = None, cell_lengths = None, cell_angles = None, total_energy = None, potential_energy = None):
@@ -169,13 +169,13 @@ def write_netcdf_frame(netcdf_file, frame_index, time = None, coordinates = None
     potential_energy (float) - potential energy (kcal/mol)
 
   """
-  if time != None: netcdf_file.variables['time'][frame_index] = time      
+  if time != None: netcdf_file.variables['time'][frame_index] = time
   if coordinates != None: netcdf_file.variables['coordinates'][frame_index,:,:] = coordinates
   if cell_lengths != None: netcdf_file.variables['cell_lengths'][frame_index,:] = cell_lengths
   if cell_angles != None: netcdf_file.variables['cell_angles'][frame_index,:] = cell_angles
   if total_energy != None: netcdf_file.variables['total_energy'][frame_index] = total_energy
   if potential_energy != None: netcdf_file.variables['total_energy'][frame_index] = potential_energy
-  
+
   return
 
 def read_amber_energy_frame(infile):
@@ -190,7 +190,7 @@ def read_amber_energy_frame(infile):
 
     # number of lines per .ene block
     ene_lines_per_block = 10
-    
+
     # energy keys
     energy_keys = [
         'Nsteps', 'time', 'Etot', 'EKinetic', # L0
@@ -226,7 +226,7 @@ def write_netcdf_replica_trajectories(directory, prefix, title, ncfile):
        directory (string) - the directory to write files to
        prefix (string) - prefix for replica trajectory files
        title (string) - the title to give each NetCDF file
-       ncfile (NetCDF) - NetCDF file object for input file       
+       ncfile (NetCDF) - NetCDF file object for input file
     """
     # Get current dimensions.
     niterations = ncfile.variables['positions'].shape[0]
@@ -252,14 +252,14 @@ def compute_torsion_trajectories(ncfile, filename=None):
 
     ARGUMENTS
        ncfile (NetCDF) - NetCDF file object for input file
-       
+
     OPTIONAL ARGUMENTS
        filename (string) - name of file to be written if provided (default:None)
 
     RETURNS
        phi_kt (numpy array : nstates x niterations) - torsion history
     """
-    atoms = [1735, 1737, 1739, 1741] # N-CA-CB-CG1 of Val 111        
+    atoms = [1735, 1737, 1739, 1741] # N-CA-CB-CG1 of Val 111
 
     # Get current dimensions.
     niterations = ncfile.variables['positions'].shape[0]
@@ -268,7 +268,7 @@ def compute_torsion_trajectories(ncfile, filename=None):
 
     # Compute torsion angle
     def compute_torsion(positions, atoms):
-        # Compute vectors from cross products        
+        # Compute vectors from cross products
         vBA = positions[atoms[0],:] - positions[atoms[1],:]
         vBC = positions[atoms[2],:] - positions[atoms[1],:]
         vCB = positions[atoms[1],:] - positions[atoms[2],:]
@@ -278,7 +278,7 @@ def compute_torsion_trajectories(ncfile, filename=None):
         cos_theta = numpy.dot(v1,v2) / numpy.sqrt(numpy.dot(v1,v1) * numpy.dot(v2,v2))
         theta = numpy.arccos(cos_theta) * 180.0 / math.pi
         return theta
-                
+
     # Compute torsion angles for each replica
     phi_kt = numpy.zeros([nstates,niterations], numpy.float32)
     for iteration in range(niterations):
@@ -309,31 +309,31 @@ def write_pdb_replica_trajectories(basepdb, directory, prefix, title, ncfile, tr
        directory (string) - the directory to write files to
        prefix (string) - prefix for replica trajectory files
        title (string) - the title to give each PDB file
-       ncfile (NetCDF) - NetCDF file object for input file       
+       ncfile (NetCDF) - NetCDF file object for input file
     """
     niterations = ncfile.variables['positions'].shape[0]
     nstates = ncfile.variables['positions'].shape[1]
     natoms = ncfile.variables['positions'].shape[2]
-    
+
     atom_list=read_pdb(basepdb)
     if (len(atom_list) != natoms):
         print ("Number of atoms in trajectory (%d) differs from number of atoms in reference PDB (%d)." % (natoms, len(atom_list)))
         raise Exception
-    
+
     if trajectory_by_state:
     	for state_index in range(0,nstates):
-    		print "Working on state %d / %d" % (state_index,nstates)  
+    		print "Working on state %d / %d" % (state_index,nstates)
         	file_name= "%s-%03d.pdb" % (prefix,state_index)
 		full_filename=directory+'/'+file_name
 		outfile = open(full_filename, 'w')
 		for iteration in range(niterations):
         		state_indices = ncfile.variables['states'][iteration,:]
         		replica_index = list(state_indices).index(state_index)
-    			outfile.write('MODEL     %4d\n' % (iteration+1))                        
+    			outfile.write('MODEL     %4d\n' % (iteration+1))
 			write_pdb(atom_list,outfile,iteration,replica_index,title,ncfile,trajectory_by_state=True)
     			outfile.write('ENDMDL\n')
-		
-		outfile.close()	
+
+		outfile.close()
 
     else:
 	for replica_index in range(nstates):
@@ -342,12 +342,12 @@ def write_pdb_replica_trajectories(basepdb, directory, prefix, title, ncfile, tr
 		full_filename=directory+'/'+file_name
 		outfile = open(full_filename, 'w')
 		for iteration in range(niterations):
-                    outfile.write('MODEL     %4d\n' % (iteration+1))                                            
+                    outfile.write('MODEL     %4d\n' % (iteration+1))
                     write_pdb(atom_list,outfile,iteration,replica_index,title,ncfile,trajectory_by_state=False)
-                    outfile.write('ENDMDL\n')                    
+                    outfile.write('ENDMDL\n')
 
 		outfile.close()
-		
+
     return
 
 def read_pdb(filename):
@@ -363,7 +363,7 @@ def read_pdb(filename):
     atoms (list of dict) - atoms[index] is a dict of fields for the ATOM residue
 
     """
-    
+
     # Read the PDB file into memory.
     pdbfile = open(filename, 'r')
 
@@ -387,7 +387,7 @@ def read_pdb(filename):
             atom["occupancy"] = line[54:60]
             atom["tempFactor"] = line[60:66]
             atoms.append(atom)
-            
+
     # Close PDB file.
     pdbfile.close()
 
@@ -401,7 +401,7 @@ def write_pdb(atoms, filename, iteration, replica, title, ncfile,trajectory_by_s
        atoms (list of dict) - parsed PDB file ATOM entries from read_pdb() - WILL BE CHANGED
        filename (string) - name of PDB file to be written
        title (string) - the title to give each PDB file
-       ncfile (NetCDF) - NetCDF file object for input file       
+       ncfile (NetCDF) - NetCDF file object for input file
     """
 
     # Extract coordinates to be written.
@@ -417,7 +417,7 @@ def write_pdb(atoms, filename, iteration, replica, title, ncfile,trajectory_by_s
         atom["y"] = "%8.3f" % coordinates[index,1]
         atom["z"] = "%8.3f" % coordinates[index,2]
         filename.write('ATOM  %(serial)5s %(atom)4s%(altLoc)c%(resName)3s %(chainID)c%(Seqno)5s   %(x)8s%(y)8s%(z)8s\n' % atom)
-        
+
     # Close file.
     #outfile.close()
 
@@ -446,10 +446,10 @@ def write_crd(filename, iteration, replica, title, ncfile):
     for index in range(natoms):
         outfile.write('%12.7f%12.7f%12.7f' % (coordinates[index,0], coordinates[index,1], coordinates[index,2]))
         if ((index+1) % 2 == 0): outfile.write('\n')
-        
+
     # Close file.
     outfile.close()
-    
+
 def show_mixing_statistics(ncfile, cutoff=0.05, nequil=0):
     """
     Print summary of mixing statistics.
@@ -457,14 +457,14 @@ def show_mixing_statistics(ncfile, cutoff=0.05, nequil=0):
     ARGUMENTS
 
     ncfile (netCDF4.Dataset) - NetCDF file
-    
+
     OPTIONAL ARGUMENTS
 
     cutoff (float) - only transition probabilities above 'cutoff' will be printed (default: 0.05)
     nequil (int) - if specified, only samples nequil:end will be used in analysis (default: 0)
-    
+
     """
-    
+
     # Get dimensions.
     niterations = ncfile.variables['states'].shape[0]
     nstates = ncfile.variables['states'].shape[1]
@@ -504,7 +504,7 @@ def show_mixing_statistics(ncfile, cutoff=0.05, nequil=0):
         print "Subdominant eigenvalue is unity; Markov chain is decomposable."
     else:
         print "Subdominant eigenvalue is %9.5f; state equilibration timescale is ~ %.1f iterations" % (mu[1], 1.0 / (1.0 - mu[1]))
-        
+
     return
 
 def analyze_acceptance_probabilities(ncfile, cutoff = 0.4):
@@ -538,13 +538,13 @@ def analyze_acceptance_probabilities(ncfile, cutoff = 0.4):
 
     # Write rows.
     for i in range(nstates):
-        print "%4d" % i, 
+        print "%4d" % i,
         for j in range(nstates):
             if Pij[i,j] > cutoff:
                 print "%6.3f" % Pij[i,j],
             else:
                 print "%6s" % "",
-            
+
         print ""
 
     return
@@ -608,21 +608,21 @@ def check_energies(ncfile, atoms):
         print "Iterations where explosions were detected for each replica:"
         print first_nan_k
         print "Writing PDB files immediately before explosions were detected..."
-        for replica in range(nstates):            
+        for replica in range(nstates):
             if (first_nan_k[replica] > 0):
                 state = ncfile.variables['states'][iteration,replica]
                 iteration = first_nan_k[replica] - 1
                 filename = 'replica-%d-before-explosion.pdb' % replica
                 title = 'replica %d state %d iteration %d' % (replica, state, iteration)
                 write_pdb(atoms, filename, iteration, replica, title, ncfile)
-                filename = 'replica-%d-before-explosion.crd' % replica                
+                filename = 'replica-%d-before-explosion.crd' % replica
                 write_crd(filename, iteration, replica, title, ncfile)
         sys.exit(1)
 
     # There are some energies that are 'nan', but these are energies at foreign lambdas.  We'll just have to be careful with MBAR.
     # Raise a warning.
     print "WARNING: Some energies at foreign lambdas are 'nan'.  This is recoverable."
-        
+
     return
 
 def check_positions(ncfile):
@@ -694,7 +694,7 @@ def estimate_free_energies(ncfile, ndiscard=0, nuse=None, g=1.0, replicas=None):
     if (nuse):
         u_kln_replica = u_kln_replica[:,:,0:nuse]
         states_kn_replica = states_kn_replica[:,0:nuse]
-    
+
     # Subsample data to obtain uncorrelated samples
     A_n = u_kln_replica[0,0,:]
     indices = timeseries.subsampleCorrelatedData(A_n, g=g) # indices of uncorrelated samples
@@ -706,13 +706,13 @@ def estimate_free_energies(ncfile, ndiscard=0, nuse=None, g=1.0, replicas=None):
     u_kln = numpy.zeros([nstates, nstates, N], numpy.float64)
     if replicas is None:
         # Use all replicas.
-        N_k = N * numpy.ones(nstates, numpy.int32)    
+        N_k = N * numpy.ones(nstates, numpy.int32)
         for n in range(N):
             state_indices = states_kn_replica[:,n]
             u_kln[state_indices,:,n] = u_kln_replica[:,:,n]
     else:
         # Use only specified replicas.
-        N_k = numpy.zeros(nstates, numpy.int32)    
+        N_k = numpy.zeros(nstates, numpy.int32)
         for n in range(N):
             state_indices = ncfile.variables['states'][n,:]
             for replica in replicas:
@@ -722,14 +722,14 @@ def estimate_free_energies(ncfile, ndiscard=0, nuse=None, g=1.0, replicas=None):
 
     #===================================================================================================
     # Estimate free energy difference with MBAR.
-    #===================================================================================================   
-   
+    #===================================================================================================
+
     # Initialize MBAR (computing free energy estimates, which may take a while)
     mbar = MBAR(u_kln, N_k, verbose = False, maximum_iterations = 50000) # use slow self-consistent-iteration (the default)
 
     # Get matrix of dimensionless free energy differences and uncertainty estimate.
     (Deltaf_ij, dDeltaf_ij) = mbar.getFreeEnergyDifferences(uncertainty_method='svd-ew')
-   
+
     # Return free energy differences and an estimate of the covariance.
     return (Deltaf_ij, dDeltaf_ij)
 
@@ -741,7 +741,7 @@ def estimate_enthalpies(ncfile, ndiscard = 0, nuse = None):
 
     OPTIONAL ARGUMENTS
        ndiscard (int) - number of iterations to discard to equilibration
-       nuse (int) - number of iterations to use (after discarding) 
+       nuse (int) - number of iterations to use (after discarding)
 
     TODO: Automatically determine 'ndiscard'.
     TODO: Combine some functions with estimate_free_energies.
@@ -784,7 +784,7 @@ def estimate_enthalpies(ncfile, ndiscard = 0, nuse = None):
     u_kln_replica = u_kln_replica[:,:,ndiscard:]
     u_kln = u_kln[:,:,ndiscard:]
     u_n = u_n[ndiscard:]
-    
+
     # Truncate to number of specified conformations to use
     if (nuse):
         u_kln_replica = u_kln_replica[:,:,0:nuse]
@@ -797,7 +797,7 @@ def estimate_enthalpies(ncfile, ndiscard = 0, nuse = None):
     #print u_n # DEBUG
     #indices = range(0,u_n.size) # DEBUG - assume samples are uncorrelated
     N = len(indices) # number of uncorrelated samples
-    N_k[:] = N      
+    N_k[:] = N
     u_kln[:,:,0:N] = u_kln[:,:,indices]
     print "number of uncorrelated samples:"
     print N_k
@@ -861,14 +861,14 @@ def detect_equilibration(A_t, nskip=1, method='fft'):
 
     t0 (int) - start of equilibrated data
     g (float) - statistical inefficiency of equilibrated data
-    Neff_max (float) - number of uncorrelated samples   
-    
+    Neff_max (float) - number of uncorrelated samples
+
     """
     T = A_t.size
 
     # Special case if timeseries is constant.
     if A_t.std() == 0.0:
-        return (0, 1, T)    
+        return (0, 1, T)
 
     indices = range(0, T-1, nskip)
     N = len(indices)
@@ -880,12 +880,12 @@ def detect_equilibration(A_t, nskip=1, method='fft'):
         t0_n[n] = t0
         g_n[n] = timeseries.statisticalInefficiency(A_t[t0:T], method=method)
         Neff_n[n] = (T-t0) / g_n[n]
-    
+
     Neff_max = Neff_n.max()
     n = Neff_n.argmax()
     t0 = t0_n[n]
     g = g_n[n]
-    
+
     return (t0, g, Neff_max)
 
 
@@ -893,7 +893,7 @@ def detect_equilibration(A_t, nskip=1, method='fft'):
 # MAIN
 #=============================================================================================
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
 
 
     import simtk.unit as units
@@ -929,7 +929,7 @@ if __name__ == '__main__':
         print "dimensions:"
         for dimension_name in ncfile.dimensions.keys():
             print "%16s %8d" % (dimension_name, len(ncfile.dimensions[dimension_name]))
-    
+
         # Read dimensions.
         niterations = ncfile.variables['positions'].shape[0]
         nstates = ncfile.variables['positions'].shape[1]
@@ -943,7 +943,7 @@ if __name__ == '__main__':
 
 #        # Write out replica trajectories
 #        print "Writing replica trajectories...\n"
-#        title = 'Source %(source_directory)s phase %(phase)s' % vars()        
+#        title = 'Source %(source_directory)s phase %(phase)s' % vars()
 #        write_netcdf_replica_trajectories(source_directory, phase, title, ncfile)
 
 #        # Read reference PDB file.
@@ -970,7 +970,7 @@ if __name__ == '__main__':
         u_n = extract_u_n(ncfile)
         [nequil, g, Neff_max] = detect_equilibration(u_n)
         print [nequil, Neff_max]
- 
+
         # Examine acceptance probabilities.
         show_mixing_statistics(ncfile, cutoff=0.05, nequil=nequil)
 
@@ -982,21 +982,21 @@ if __name__ == '__main__':
         for i in range(nstates):
             for j in range(nstates):
                 print "%8.3f" % Deltaf_ij[i,j],
-            print ""        
-    
+            print ""
+
     # Matrix of uncertainties in free energy difference (expectations standard deviations of the estimator about the true free energy)
         print "dDeltaf_ij:"
         for i in range(nstates):
             for j in range(nstates):
                 print "%8.3f" % dDeltaf_ij[i,j],
-            print ""        
+            print ""
 
         # Estimate average enthalpies
         (DeltaH_i, dDeltaH_i) = estimate_enthalpies(ncfile, ndiscard = nequil)
-    
+
         # Accumulate free energy differences
         entry = dict()
-        entry['DeltaF'] = Deltaf_ij[0,nstates-1] 
+        entry['DeltaF'] = Deltaf_ij[0,nstates-1]
         entry['dDeltaF'] = dDeltaf_ij[0,nstates-1]
         entry['DeltaH'] = DeltaH_i[nstates-1] - DeltaH_i[0]
         entry['dDeltaH'] = numpy.sqrt(dDeltaH_i[0]**2 + dDeltaH_i[nstates-1]**2)
@@ -1009,7 +1009,7 @@ if __name__ == '__main__':
 
         # Close input NetCDF file.
         ncfile.close()
-    
+
     # Compute hydration free energy (free energy of transfer from vacuum to water)
     DeltaF = data['vacuum']['DeltaF'] - data['solvent']['DeltaF']
     dDeltaF = numpy.sqrt(data['vacuum']['dDeltaF']**2 + data['solvent']['dDeltaF']**2)
@@ -1041,7 +1041,6 @@ if __name__ == '__main__':
     print ""
 
     # Compute binding enthalpy
-    DeltaH = data['solvent']['DeltaH'] - DeltaF_restraints - data['complex']['DeltaH'] 
+    DeltaH = data['solvent']['DeltaH'] - DeltaF_restraints - data['complex']['DeltaH']
     dDeltaH = numpy.sqrt(data['solvent']['dDeltaH']**2 + data['complex']['dDeltaH']**2)
     print "Binding enthalpy    : %16.3f +- %.3f kT (%16.3f +- %.3f kcal/mol)" % (DeltaH, dDeltaH, DeltaH * kT / units.kilocalories_per_mole, dDeltaH * kT / units.kilocalories_per_mole)
-
